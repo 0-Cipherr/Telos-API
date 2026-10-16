@@ -5,15 +5,12 @@ import {
   type WalletClientConfig,
 } from "viem";
 import { getChainClients } from "../../viemClient..js";
-import { telos } from "../Telos-AddressBook.js";
-
-class VaultExecutor {
-  currentChain: Number = 0;
-
-  VaultExecutor(chain: Number) {
-    this.currentChain = chain;
-  }
-
+import {
+  getAllVaults,
+  getVaultById,
+  insertVault,
+} from "../db/vault-handler/vault-queries.js";
+export class VaultExecutor {
   async setChain(chain: WalletClientConfig) {}
   async setClient(account: any, cleint: any, chain: any) {
     const client: WalletClient = createWalletClient({
@@ -23,42 +20,42 @@ class VaultExecutor {
     });
   }
 
-  async getAllVaults(chainId: any) {
+  async allVaults() {
     try {
-      let vaults: any[] = [];
-      const currentId = await this.readContract(
-        chainId,
-        telos[chainId].registry,
-        [],
-        "currentVaultId",
-        [],
-      );
+      const vaults = await getAllVaults();
 
-      for (let i = 0; i < currentId; i++) {
-        const vault = await this.getVault(i, chainId);
-        vaults.push(vault);
-      }
-      return vaults;
+      return vaults || [];
     } catch (error) {
       console.log(error);
       return [];
     }
   }
 
-  async getVault(id: number, chainId: any) {
+  async vault(id: number) {
     try {
-      const vault = await this.readContract(
-        chainId,
-        telos[chainId].registry,
-        [],
-        "getVault",
-        [id],
-      );
+      const vault = await getVaultById(id);
+      return vault || [null];
     } catch (error) {
       console.log(error);
-      return null;
+      return [null];
     }
   }
+
+  async addVault(vaultName: string, vaultChains: any[], creator: string) {
+    try {
+      await insertVault(vaultName, vaultChains, creator);
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+
+  async getShareBalance() {}
+
+  async getVolume() {}
+
+  async getDepositorInfo() {}
 
   async readContract(
     chainId: Number,
@@ -156,4 +153,3 @@ class VaultExecutor {
     }
   }
 }
-module.exports = { VaultExecutor };

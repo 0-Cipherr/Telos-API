@@ -13,13 +13,23 @@ CREATE TABLE IF NOT EXISTS Bridges{
 
 CREATE TABLE Vaults if NOT EXISTS{
  id PRIMARY key,
-  vaultName TEXT;
+  vaultName TEXT,
   vaultChains Array(NUMBER),
   creator TEXT NOT NULL
-  lastUpated: timestamp,
-  asset TEXT NOT NULL,
+};
 
-}
+CREATE TABLE DeploymentsManager{
+  id PRIMARY KEY,
+  chainId NUMERIC,
+  deploymentRef FOREIGN Key REFERENCES Deployments(id)
+};
+
+CREATE TABLE Deployments IF NOT EXISTS{
+  id PRIMARY key,
+  contractType TEXT,
+  contractAddress TEXT,
+  abi JSONB NOT NULL,
+};
 
 CREATE TABLE VaultMetrics if NOT EXISTS {
   FOREIGN KEY (vault_id) REFERENCES Vault(vault_id),
