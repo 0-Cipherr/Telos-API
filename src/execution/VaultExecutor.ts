@@ -7,6 +7,8 @@ import {
 import { getChainClients } from "../../viemClient..js";
 import {
   getAllVaults,
+  getDeploymentAbi,
+  getDeploymentContract,
   getVaultById,
   insertVault,
 } from "../db/vault-handler/vault-queries.js";
@@ -38,6 +40,30 @@ export class VaultExecutor {
     } catch (error) {
       console.log(error);
       return [null];
+    }
+  }
+
+  async deposit(chainId: Number, account: any, args: any[]) {
+    try {
+      const abi: any = await getDeploymentAbi();
+      const executorAddress: string = await getDeploymentContract();
+      await this.writeContract(chainId, executorAddress, abi, "deposit", args);
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+
+  async withdraw(chainId: Number, account: any, args: any[]) {
+    try {
+      const abi: any = await getDeploymentAbi();
+      const executorAddress: string = await getDeploymentContract();
+      await this.writeContract(chainId, executorAddress, abi, "withdraw", args);
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
     }
   }
 

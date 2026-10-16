@@ -10,17 +10,18 @@ const vaultExecutor = new VaultExecutor();
 vaultRouter.get("/all", async (req, res) => {
   try {
     const result = await vaultExecutor.allVaults();
+    res.status(200).send({ result });
   } catch (error) {
     console.log(error);
+    res.status(500).send({ message: "unexpected error" });
   }
 });
 
 //first thing to run before we test and use api
 vaultRouter.get("/vault/:vaultId", async (req: any, res: any) => {
   try {
-    const { vaultId: Number } = req.params;
-    const result = await vaultExecutor.vault(vaultId);
-    console.log("Running  ");
+    const result = await vaultExecutor.vault(req.params.vaultId);
+    console.log("Running ");
     res.status(200).send({ result });
   } catch (error) {
     console.log(error);
@@ -29,8 +30,5 @@ vaultRouter.get("/vault/:vaultId", async (req: any, res: any) => {
   }
 });
 
-vaultRouter.post("/all", async (req, res) => {}); //get all vaults
-
-vaultRouter.post("/:vaultId", async (req, res) => {}); //get by id
 vaultRouter.post("/deposit/:vaultId/:depositParams", async (req, res) => {}); //get by id
 vaultRouter.post("/withdraw/:vaultId/:withdrawParams", async (req, res) => {}); //get by id

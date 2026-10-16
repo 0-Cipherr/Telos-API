@@ -24,6 +24,14 @@ export async function getVaultById(vaultId: Number) {
   }
 }
 
+export async function getDeploymentAbi() {
+  return [];
+}
+
+export async function getDeploymentContract() {
+  return "";
+}
+
 export async function insertVault(
   vaultName: string,
   vaultChains: any[],
