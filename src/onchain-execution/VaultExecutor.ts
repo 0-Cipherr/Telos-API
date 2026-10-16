@@ -22,7 +22,13 @@ class VaultExecutor {
     });
   }
 
-  async getAllVaults() {}
+  async getAllVaults() {
+    try {
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
 
   async getVault(id: number) {}
 
