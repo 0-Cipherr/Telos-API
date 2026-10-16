@@ -5,6 +5,7 @@ import {
   type WalletClientConfig,
 } from "viem";
 import { getChainClients } from "../../viemClient..js";
+import { telos } from "../Telos-AddressBook.js";
 
 class VaultExecutor {
   currentChain: Number = 0;
@@ -22,15 +23,42 @@ class VaultExecutor {
     });
   }
 
-  async getAllVaults() {
+  async getAllVaults(chainId: any) {
     try {
+      let vaults: any[] = [];
+      const currentId = await this.readContract(
+        chainId,
+        telos[chainId].registry,
+        [],
+        "currentVaultId",
+        [],
+      );
+
+      for (let i = 0; i < currentId; i++) {
+        const vault = await this.getVault(i, chainId);
+        vaults.push(vault);
+      }
+      return vaults;
     } catch (error) {
       console.log(error);
       return [];
     }
   }
 
-  async getVault(id: number) {}
+  async getVault(id: number, chainId: any) {
+    try {
+      const vault = await this.readContract(
+        chainId,
+        telos[chainId].registry,
+        [],
+        "getVault",
+        [id],
+      );
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
 
   async readContract(
     chainId: Number,
