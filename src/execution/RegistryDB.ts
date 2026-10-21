@@ -9,10 +9,12 @@ import {
   getAllVaults,
   getDeploymentAbi,
   getDeploymentContract,
+  getVaultByChain,
   getVaultById,
+  getVaultByName,
   insertVault,
 } from "../db/vault-handler/vault-queries.js";
-export class VaultExecutor {
+export class RegistryDB {
   async setChain(chain: WalletClientConfig) {}
   async setClient(account: any, cleint: any, chain: any) {
     const client: WalletClient = createWalletClient({
@@ -33,13 +35,64 @@ export class VaultExecutor {
     }
   }
 
+  async vaultByName(name: string) {
+    try {
+      const vault = await getVaultByName(name);
+      return vault || [];
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async inserVault(
+    vaultName: string,
+    vaultTicker: string,
+    vaultChains: any[],
+    creator: string,
+    addresses: string[],
+  ) {
+    try {
+      const result: any = await insertVault(
+        vaultName,
+        vaultTicker,
+        vaultChains,
+        creator,
+        addresses,
+      );
+      return result;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async vaultByChain(chainId: Number) {
+    try {
+      const vault = await getVaultByChain(chainId);
+      return vault || [];
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
   async vault(id: number) {
     try {
       const vault = await getVaultById(id);
-      return vault || [null];
+      return vault || [];
     } catch (error) {
       console.log(error);
-      return [null];
+      return [];
+    }
+  }
+
+  async metricsRefresh(id: Number) {
+    try {
+      return [];
+    } catch (error) {
+      console.log(error);
+      return [];
     }
   }
 
@@ -56,6 +109,30 @@ export class VaultExecutor {
   }
 
   async withdraw(chainId: Number, account: any, args: any[]) {
+    try {
+      const abi: any = await getDeploymentAbi();
+      const executorAddress: string = await getDeploymentContract();
+      await this.writeContract(chainId, executorAddress, abi, "withdraw", args);
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+
+  async deployNative(chainId: Number, account: any, args: any[]) {
+    try {
+      const abi: any = await getDeploymentAbi();
+      const executorAddress: string = await getDeploymentContract();
+      await this.writeContract(chainId, executorAddress, abi, "withdraw", args);
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+
+  async deployCrossChain(chainId: Number, account: any, args: any[]) {
     try {
       const abi: any = await getDeploymentAbi();
       const executorAddress: string = await getDeploymentContract();

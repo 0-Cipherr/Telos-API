@@ -1,9 +1,5 @@
 CREATE TABLE IF NOT EXISTS Bridges{
-<<<<<<< HEAD
-  vault_id PRIMARY Key,
-=======
   id PRIMARY Key,
->>>>>>> 28e5ad1d2478268bc3c1c68479ae748832f9c07b
   API_KEY TEXT NOT NULL,
   bridgeName VARCHAR(100) NOT NULL,
   chainsAvailable INTEGER[] NOT NULL,
@@ -13,9 +9,11 @@ CREATE TABLE IF NOT EXISTS Bridges{
 
 CREATE TABLE Vaults if NOT EXISTS{
  id PRIMARY key,
-  vaultName TEXT,
-  vaultChains Array(NUMBER),
-  creator TEXT NOT NULL
+  vaultName TEXT, --vaultName
+  vaultTicker TEXT,
+  vaultChains Array(NUMBER), -- array of chains vualt is on
+  creator TEXT NOT NULL, --creator 
+  addresses Array(Text) -- array of the vaults addresses must match chains legnth and indexes as well
 };
 
 CREATE TABLE DeploymentsManager{
@@ -33,9 +31,18 @@ CREATE TABLE Deployments IF NOT EXISTS{
 
 CREATE TABLE VaultMetrics if NOT EXISTS {
   FOREIGN KEY (vault_id) REFERENCES Vault(vault_id),
-  atr number NOT NULL,
+  volume  number NOT NULL,
+  protocolFees Number NOT NULL,
+  apy Number Not NUll,
   #/alltime rewards 
 }
 
+
+CREATE TABLE HistoricalApy{
+  vaultId FOREIGN Key REFERENCES Vaults(id),
+  apy Number Not Null,
+  apr Number Not Null,
+  timestamp TIME,
+}
 
 INSERT INTO Bridges (API_KEY , bridgeName,chainsAvailable, baseUrl) VALUES ('Test', [], 'https://wtf.com');
