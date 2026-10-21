@@ -22,7 +22,7 @@ services:
     enviorment: #enviorment varibales in .env
       env_file: .env #sprecifying the name of the env file
       #importing envvairables storing as custom keys
-      POSTGRES_USER: {}
+      POSTGRES_USER:
       POSTGRES_PASSWORD: {}
       ###########################
       ports: 5432:5432 #(computers port:dockers port one its using)
