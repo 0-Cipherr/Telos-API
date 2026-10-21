@@ -2,12 +2,23 @@ import express from "express";
 import BridgeQueries from "../db/bridge-handler/bridgeQueries.js";
 import { RegistryDB } from "../execution/RegistryDB.js";
 import type { BridgeQueryRules } from "../interfaces/bridge-interfaces.js";
+import type { DeployNativeParams } from "../interfaces/OnchainInterface.js";
+import { encodeValues } from "../onchain/onchain-data-hanler.js";
 import { Registry } from "../onchain/onchain-executor.js";
+import type { address } from "../types/OnchainTypes.js";
 
 export const registryRouter = express.Router();
 const bridgeQueries: BridgeQueryRules = new BridgeQueries();
 const vaultsRegistryDB = new RegistryDB();
-const registry = new Registry();
+const _registryAdrrress: address = "0x";
+const _messengerAddress: address = "0x";
+const _factoryAddress: address = "0x";
+const registry = new Registry(
+  _registryAdrrress,
+  _messengerAddress,
+  _factoryAddress,
+);
+
 //get all vaults available
 registryRouter.get("/all", async (req, res) => {
   try {
@@ -73,12 +84,25 @@ registryRouter.get("/vault/:chainId", async (req: any, res: any) => {
 });
 
 //onchain vault qyite
-registryRouter.get(
+registryRouter.put(
   "/vault/deposit/native/quote",
   async (req: any, res: any) => {
     try {
+      const registry: any = new Registry(
+        _registryAdrrress,
+        _messengerAddress,
+        _factoryAddress,
+      );
       const { account, quoteParams }: any = req.body; //vem config for user
-      const quote: any = await registry.nativeQuote();
+
+      const { owner, deployParams }: any = quoteParams;
+      const deployNativeParams: DeployNativeParams = {
+        owner,
+        _deployParams: encodeValues(deployParams),
+      };
+
+      await registry.setViemAccount();
+      const quote: any = await registry.createVaultNative(owner, deployParams);
       res.status(200).send({ message: "" });
     } catch (error) {
       console.log(error);

@@ -1,3 +1,5 @@
+import type { QueryResult } from "pg";
+import type { address } from "../../types/OnchainTypes.js";
 import pool from "../pool.js";
 
 export async function getAllVaults() {
@@ -62,9 +64,14 @@ export async function getVaultByChain(chainId: Number) {
   }
 }
 
-export async function getDeploymentAbi() {
+export async function getAbiByAddress(contractAddress: address) {
   try {
-    const results = await getDeployments();
+    await pool.connect();
+
+    const results: QueryResult<any> = await pool.query(
+      `SELECT abi FROM Deployments WHERE contractAddress = $1`,
+      [contractAddress],
+    );
     return results || [];
   } catch (error) {
     console.log(error);

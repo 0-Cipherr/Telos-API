@@ -4,15 +4,22 @@ export class OnchainTool {
   private viemConfig: any;
 
   setViemConfig() {}
-   constructWriteCallParams(account:any, contractAddress:address, functionName:string, args:any[], abi:any[]:){
-    return{
-        account,
-      address:contractAddress,
+  constructWriteCallParams(
+    account: any,
+    contractAddress: address,
+    functionName: string,
+    args: any[],
+    abi: any[],
+    value: any,
+  ) {
+    return {
+      account,
+      address: contractAddress,
       functionName,
       args,
-      abi
-
-    }
+      abi,
+      value,
+    };
   }
   async write(params: any) {
     try {
