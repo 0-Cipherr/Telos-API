@@ -1,16 +1,28 @@
+import type { DeployNativeParams } from "../interfaces/OnchainInterface.js";
+import { OnchainTool } from "./onchain-tools.js";
+
 export class Registry {
   private viemAccount: any;
+  private onChainTool: any;
+
   constructor() {}
 
   setViemAccount(newAccount: any) {
     this.viemAccount = newAccount;
+    this.onChainTool = new OnchainTool();
   }
 
-  async nativeQuote() {}
-  async createVaultNative() {}
+  async createVaultNative(owner: string, deployParams: DeployNativeParams) {
+    try {
+      const result = await this.onChainTool.write();
+      return result;
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
-  async crossChainQuote() {}
-  async creatVaultCrossChain() {}
+  async crossChainDeployQuote() {}
+  async creatrVaultCrossChain() {}
 
   async deposit() {}
 
