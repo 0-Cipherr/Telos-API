@@ -29,7 +29,12 @@ export class Registry {
         const _ABI = await this.getRegistryABI(this.registryAddress);
         this.ABI = _ABI;
       };
-      update();
+      // `update` is async: without this catch a database hiccup becomes an
+      // unhandled rejection and takes the whole API (including /api/chat) down.
+      void update().catch((error) => {
+        console.log(error);
+        this.ABI = [];
+      });
     } catch (error) {
       console.log(error);
       this.ABI = [];

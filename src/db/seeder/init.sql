@@ -16,6 +16,15 @@ CREATE TABLE Vaults if NOT EXISTS{
   addresses Array(Text) -- array of the vaults addresses must match chains legnth and indexes as well
 };
 
+CREATE TABLE TelosAgent{
+ id PRIMARY key,
+WID VARBINARY(MAX),
+walletAddress TEXT,
+vaultMnaaged  FOREIGN Key REFERENCES Vaults(id),
+creatorUserName TEXT,
+agentDeployerAddress: TEXT
+};
+
 CREATE TABLE DeploymentsManager{
   id PRIMARY KEY,
   chainId NUMERIC,
@@ -45,4 +54,4 @@ CREATE TABLE HistoricalApy{
   timestamp TIME,
 }
 
-INSERT INTO Bridges (API_KEY , bridgeName,chainsAvailable, baseUrl) VALUES ('Test', [], 'https://wtf.com');
+-- INSERT INTO Bridges (API_KEY , bridgeName,chainsAvailable, baseUrl) VALUES ('Test', [], 'https://wtf.com');

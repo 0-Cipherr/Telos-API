@@ -7,13 +7,13 @@ import {
 import { getChainClients } from "../../viemClient..js";
 import {
   getAllVaults,
-  getDeploymentAbi,
   getDeploymentContract,
   getVaultByChain,
   getVaultById,
   getVaultByName,
   insertVault,
 } from "../db/vault-handler/vault-queries.js";
+import type { address } from "../types/OnchainTypes.js";
 export class RegistryDB {
   async setChain(chain: WalletClientConfig) {}
   async setClient(account: any, cleint: any, chain: any) {
@@ -134,7 +134,7 @@ export class RegistryDB {
 
   async deployCrossChain(chainId: Number, account: any, args: any[]) {
     try {
-      const abi: any = await getDeploymentAbi();
+      const abi: any = [];
       const executorAddress: string = await getDeploymentContract();
       await this.writeContract(chainId, executorAddress, abi, "withdraw", args);
       return true;
@@ -144,9 +144,21 @@ export class RegistryDB {
     }
   }
 
-  async addVault(vaultName: string, vaultChains: any[], creator: string) {
+  async addVault(
+    vaultName: string,
+    vaultTicker: string,
+    vaultChains: any[],
+    creator: address,
+    deployedAddresses: address[],
+  ) {
     try {
-      await insertVault(vaultName, vaultChains, creator);
+      await insertVault(
+        vaultName,
+        vaultTicker,
+        vaultChains,
+        creator,
+        deployedAddresses,
+      );
       return true;
     } catch (error) {
       console.log(error);

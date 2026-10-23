@@ -113,6 +113,44 @@ registryRouter.put(
 );
 
 //createVault
+registryRouter.get("/agent", async (req: any, res: any) => {
+  try {
+    const { vaultName, vaultTicker, vaultChains, creator, addresses } =
+      req.body;
+    const result = await vaultsRegistryDB.inserVault(
+      vaultName,
+      vaultTicker,
+      vaultChains,
+      creator,
+      addresses,
+    );
+    res.status(200).send({ message: "Vault successfully created!" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
+//createVault
+registryRouter.get(
+  "/vault/create/native/prepare",
+  async (req: any, res: any) => {
+    try {
+      const { vaultName, vaultTicker, vaultChains, creator, addresses } =
+        req.body;
+      const result = await vaultsRegistryDB.inserVault(
+        vaultName,
+        vaultTicker,
+        vaultChains,
+        creator,
+        addresses,
+      );
+      res.status(200).send({ message: "Vault successfully created!" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "unexpected error" });
+    }
+  },
+);
 registryRouter.post("/vault/create/native", async (req: any, res: any) => {
   try {
     const { vaultName, vaultTicker, vaultChains, creator, addresses } =
