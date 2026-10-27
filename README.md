@@ -1,44 +1,17 @@
-# Avenor API
+# Telos — API
 
-Backend API for **Avenor**, handling smart-contract interactions, bridge integrations, and supporting services.
+The backend API for Telos, providing the data and services behind its cross-chain vault marketplace.
 
-### ⚙️ Stack
+### Responsibilities
+- Vault and strategy data management
+- PostgreSQL persistence and database queries
+- Bridge integrations and cross-chain query infrastructure
+- API endpoints for the frontend
+- AI integrations and strategy-related services
+- Support for marketplace and vault-related application data
 
-* TypeScript
-* Node.js
-* Express
-* PostgreSQL
+### Tech Stack
+Node.js · TypeScript · Express · PostgreSQL
 
-### 🚀 Development
-
-```bash
-npm install
-npm run dev
-```
-
-### 📦 Deploy (frontend + chat API on one origin)
-
-The API also serves the built SPA, so the browser talks to `/api/chat` with no
-CORS or separate static host.
-
-```bash
-# 1. build the frontend
-cd ../Telos-Frontend/telos && npm install && npm run build
-
-# 2. configure the API key (gitignored)
-cd ../../Telos-API && cp .env.example .env   # then edit OPEN_ROUTER_SECRET
-
-# 3. run API + Postgres
-cd .. && docker compose up --build
-```
-
-Open `http://localhost:3000`. `GET /api/chat` reports whether a server-side key
-is configured; `POST /api/chat` streams strategy tokens or returns a single
-audit verdict when called with `stream: false` and `purpose: "audit"`.
-
-> Free OpenRouter models require no credits, but an account with 0 credits is
-> limited to **50 free requests/day**. One strategy needs ~2-4 requests
-> (generation, optional repair, audit). Add credits to raise the cap, or point
-> `OPEN_ROUTER_MODELS` at a paid model.
-
-> **Avenor — the backend layer connecting applications to on-chain infrastructure.**
+### Development
+Configure the environment variables and database connection, then install dependencies and start the API using the scripts defined in `package.json`.
