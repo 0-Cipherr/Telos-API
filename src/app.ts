@@ -2,14 +2,14 @@
 //  all following same standard and functioins like wr doing on solifity
 //but instead we doing in typescript
 //index.ts
+import cors from "cors";
 import "dotenv/config";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
 import type { Application, Request, Response } from "express";
 import express from "express";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { chatRouter } from "./llm/chatProxy.js";
 import { registryRouter } from "./vaults/registryRouter.js";
-
 const app: Application = express();
 
 // The chat/audit proxy is independent of Postgres. A database outage should
@@ -25,6 +25,7 @@ app.use("/registry", registryRouter);
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({ ok: true });
 });
+app.use(cors());
 
 // Serve the built frontend from the same origin as the API. In production the
 // browser calls `/api/chat` with no CORS dance and no separate static host.

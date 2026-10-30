@@ -1,9 +1,21 @@
 import express from "express";
 import BridgeQueries from "../db/bridge-handler/bridgeQueries.js";
+import {
+  getAllDepositors,
+  getAllStrategies,
+  getAllVaults,
+  getDepositorsById,
+  getVaultByChain,
+  getVaultByChainId,
+  getVaultById,
+  getVaultByName,
+  getVaultByTicker,
+  insertDepositors,
+  insertStrategy,
+  insertVault,
+} from "../db/vault-handler/vault-queries.js";
 import { RegistryDB } from "../execution/RegistryDB.js";
 import type { BridgeQueryRules } from "../interfaces/bridge-interfaces.js";
-import type { DeployNativeParams } from "../interfaces/OnchainInterface.js";
-import { encodeValues } from "../onchain/onchain-data-hanler.js";
 import { Registry } from "../onchain/onchain-executor.js";
 import type { address } from "../types/OnchainTypes.js";
 
@@ -19,10 +31,33 @@ const registry = new Registry(
   _factoryAddress,
 );
 
+registryRouter.post("/add/vault", async (req, res) => {
+  try {
+    if (req.body) {
+      const { vault }: any = req.body;
+      if (vault) {
+        const result = await insertVault(
+          vault[0],
+          vault[1],
+          vault[2],
+          vault[3],
+          vault[4],
+        );
+        res.status(200).send({ message: "Vault Created!" });
+      }
+    } else {
+      res.status(500).send({ message: "Body not formatted properly!" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
+
 //get all vaults available
 registryRouter.get("/all", async (req, res) => {
   try {
-    const result = await vaultsRegistryDB.allVaults();
+    const result = await getAllVaults();
     res.status(200).send({ result });
   } catch (error) {
     console.log(error);
@@ -30,87 +65,68 @@ registryRouter.get("/all", async (req, res) => {
   }
 });
 
-registryRouter.post("/add", async (req, res) => {
+registryRouter.get("/:vaultId", async (req: any, res: any) => {
   try {
-    const result = await vaultsRegistryDB.addVault(
-      req.body.vaultInfo.vaultName,
-      req.body.vaultInfo.vaultChains,
-      req.body.creator,
-    );
-    res.status(200).send({ message: "Vault Created!" });
+    const result = await getVaultById(req.params.vaultId);
+    console.log("Running ");
+    res.status(200).send({ result });
   } catch (error) {
     console.log(error);
+
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
+
+registryRouter.get("/:vaultTicker", async (req: any, res: any) => {
+  try {
+    vaultsRegistryDB;
+    const result = await getVaultByTicker(req.params.vaultTicker);
+    console.log("Running ");
+    res.status(200).send({ result });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
+
+registryRouter.get("/:vaultName", async (req: any, res: any) => {
+  try {
+    const result = await getVaultByName(req.params.vaultName);
+    console.log("Running ");
+    res.status(200).send({ result });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
+
+registryRouter.get("/:chainIdPrimary", async (req: any, res: any) => {
+  try {
+    const result = await getVaultByChainId(Number(req.params.chainIdPrimary));
+    console.log("Running ");
+    res.status(200).send({ result });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
+
+registryRouter.get("/:creatorId", async (req: any, res: any) => {
+  try {
+    const result = await getVaultByChain(Number(req.params.creatorId));
+    console.log("Running ");
+    res.status(200).send({ result });
+  } catch (error) {
+    console.log(error);
+
     res.status(500).send({ message: "unexpected error" });
   }
 });
 
 //first thing to run before we test and use api
-registryRouter.get("/vault/:vaultId", async (req: any, res: any) => {
-  try {
-    const result = await vaultsRegistryDB.vault(req.params.vaultId);
-    console.log("Running ");
-    res.status(200).send({ result });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).send({ message: "unexpected error" });
-  }
-});
-
-registryRouter.get("/vault/:vaultName", async (req: any, res: any) => {
-  try {
-    const result = await vaultsRegistryDB.vaultByName(req.params.vaultName);
-    console.log("Running ");
-    res.status(200).send({ result });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).send({ message: "unexpected error" });
-  }
-});
-
-registryRouter.get("/vault/:chainId", async (req: any, res: any) => {
-  try {
-    const result = await vaultsRegistryDB.vaultByChain(
-      Number(req.params.chainId),
-    );
-    console.log("Running ");
-    res.status(200).send({ result });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).send({ message: "unexpected error" });
-  }
-});
-
-//onchain vault qyite
-registryRouter.put(
-  "/vault/deposit/native/quote",
-  async (req: any, res: any) => {
-    try {
-      const registry: any = new Registry(
-        _registryAdrrress,
-        _messengerAddress,
-        _factoryAddress,
-      );
-      const { account, quoteParams }: any = req.body; //vem config for user
-
-      const { owner, deployParams }: any = quoteParams;
-      const deployNativeParams: DeployNativeParams = {
-        owner,
-        _deployParams: encodeValues(deployParams),
-      };
-
-      await registry.setViemAccount();
-      const quote: any = await registry.createVaultNative(owner, deployParams);
-      res.status(200).send({ message: "" });
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).send({ message: "unexpected error" });
-    }
-  },
-);
 
 //createVault
 registryRouter.get("/agent", async (req: any, res: any) => {
@@ -131,27 +147,24 @@ registryRouter.get("/agent", async (req: any, res: any) => {
   }
 });
 //createVault
-registryRouter.get(
-  "/vault/create/native/prepare",
-  async (req: any, res: any) => {
-    try {
-      const { vaultName, vaultTicker, vaultChains, creator, addresses } =
-        req.body;
-      const result = await vaultsRegistryDB.inserVault(
-        vaultName,
-        vaultTicker,
-        vaultChains,
-        creator,
-        addresses,
-      );
-      res.status(200).send({ message: "Vault successfully created!" });
-    } catch (error) {
-      console.log(error);
-      res.status(500).send({ message: "unexpected error" });
-    }
-  },
-);
-registryRouter.post("/vault/create/native", async (req: any, res: any) => {
+registryRouter.get("/create/native/prepare", async (req: any, res: any) => {
+  try {
+    const { vaultName, vaultTicker, vaultChains, creator, addresses } =
+      req.body;
+    const result = await vaultsRegistryDB.inserVault(
+      vaultName,
+      vaultTicker,
+      vaultChains,
+      creator,
+      addresses,
+    );
+    res.status(200).send({ message: "Vault successfully created!" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
+registryRouter.post("/create/native", async (req: any, res: any) => {
   try {
     const { vaultName, vaultTicker, vaultChains, creator, addresses } =
       req.body;
@@ -169,26 +182,90 @@ registryRouter.post("/vault/create/native", async (req: any, res: any) => {
   }
 });
 
+registryRouter.get("/depositors", async (req: any, res: any) => {
+  try {
+    const result = await getAllDepositors();
+    res.status(200).send({ message: "Vault successfully created!" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
+registryRouter.get("/depositors/:creatorId", async (req: any, res: any) => {
+  try {
+    const { creatorId } = req.body;
+    const result = await getDepositorsById(creatorId);
+    res.status(200).send({ message: "Vault successfully created!" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
+registryRouter.get("/depositors/:creatorId", async (req: any, res: any) => {
+  try {
+    const { creatorId } = req.body;
+    const result = await getDepositorsById(creatorId);
+    res.status(200).send({ message: "Vault successfully created!" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
+registryRouter.get("/startegy/all", async (req: any, res: any) => {
+  try {
+    const { creatorId } = req.body;
+    const result = await getAllStrategies();
+    res.status(200).send({ message: "Vault successfully created!" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
+registryRouter.post("/depositors/:creatorId", async (req: any, res: any) => {
+  try {
+    const { creatorId, vaultId } = req.body;
+    const result = await insertDepositors(creatorId, vaultId);
+    res.status(200).send({ message: "Vault successfully created!" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
+registryRouter.post("/strategy/:startegy", async (req: any, res: any) => {
+  try {
+    const {
+      name,
+      protocol,
+      chainId,
+      contractAddress,
+      creatorAddress,
+      configuration,
+    }: any = req.body;
+    const result = await insertStrategy(
+      name,
+      protocol,
+      chainId,
+      contractAddress,
+      creatorAddress,
+      configuration,
+    );
+    res.status(200).send({ message: "Vault successfully created!" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "unexpected error" });
+  }
+});
 //only admin access
 
 //updates metrics
-registryRouter.put(
-  "/vault/metrics/update/:vaultId",
-  async (req: any, res: any) => {
-    try {
-      const metrics = await vaultsRegistry.metricsRefresh(req.params.vaultId);
-      console.log("Running ");
-      res.status(200).send({ metrics });
-    } catch (error) {
-      console.log(error);
+registryRouter.put("/metrics/update/:vaultId", async (req: any, res: any) => {
+  try {
+    const metrics = await vaultsRegistryDB.metricsRefresh(req.params.vaultId);
+    console.log("Running ");
+    res.status(200).send({ metrics });
+  } catch (error) {
+    console.log(error);
 
-      res.status(500).send({ message: "unexpected error" });
-    }
-  },
-);
-
-registryRouter.post("/deposit/:vaultId", async (req, res) => {}); //get by id
-registryRouter.post(
-  "/withdraw/:vaultId/:withdrawParams",
-  async (req, res) => {},
-); //get by id
+    res.status(500).send({ message: "unexpected error" });
+  }
+});

@@ -7,10 +7,13 @@ import {
 import { getChainClients } from "../../viemClient..js";
 import {
   getAllVaults,
-  getDeploymentContract,
   getVaultByChain,
+  getVaultByChainId,
+  getVaultByCreatorAddress,
+  getVaultByCreatorId,
   getVaultById,
   getVaultByName,
+  getVaultByTicker,
   insertVault,
 } from "../db/vault-handler/vault-queries.js";
 import type { address } from "../types/OnchainTypes.js";
@@ -35,21 +38,11 @@ export class RegistryDB {
     }
   }
 
-  async vaultByName(name: string) {
-    try {
-      const vault = await getVaultByName(name);
-      return vault || [];
-    } catch (error) {
-      console.log(error);
-      return [];
-    }
-  }
-
   async inserVault(
     vaultName: string,
     vaultTicker: string,
     vaultChains: any[],
-    creator: string,
+    creator: address,
     addresses: string[],
   ) {
     try {
@@ -66,6 +59,15 @@ export class RegistryDB {
       return [];
     }
   }
+  async depositorByCreatorId(creatorId: Number) {
+    try {
+      const vault = await getVaultByChain(creatorId);
+      return vault || [];
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
 
   async vaultByChain(chainId: Number) {
     try {
@@ -77,7 +79,7 @@ export class RegistryDB {
     }
   }
 
-  async vault(id: number) {
+  async vaultById(id: number) {
     try {
       const vault = await getVaultById(id);
       return vault || [];
@@ -87,60 +89,60 @@ export class RegistryDB {
     }
   }
 
+  async vaultByName(name: string) {
+    try {
+      const vault = await getVaultByName(name);
+      return vault || [];
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async vaultByTicker(ticker: string) {
+    try {
+      const vault = await getVaultByTicker(ticker);
+      return vault || [];
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async vaultByChainIdPrimary(chainIdPrimay: number) {
+    try {
+      const vault = await getVaultByChainId(chainIdPrimay);
+      return vault || [];
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async vaultByCreatorId(creatorId: number) {
+    try {
+      const vault = await getVaultByCreatorId(creatorId);
+      return vault || [];
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+  async vaultByCreatorAddress(creator: address) {
+    try {
+      const vault = await getVaultByCreatorAddress(creator);
+      return vault || [];
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
   async metricsRefresh(id: Number) {
     try {
       return [];
     } catch (error) {
       console.log(error);
       return [];
-    }
-  }
-
-  async deposit(chainId: Number, account: any, args: any[]) {
-    try {
-      const abi: any = await getDeploymentAbi();
-      const executorAddress: string = await getDeploymentContract();
-      await this.writeContract(chainId, executorAddress, abi, "deposit", args);
-      return true;
-    } catch (error) {
-      console.log(error);
-      return false;
-    }
-  }
-
-  async withdraw(chainId: Number, account: any, args: any[]) {
-    try {
-      const abi: any = await getDeploymentAbi();
-      const executorAddress: string = await getDeploymentContract();
-      await this.writeContract(chainId, executorAddress, abi, "withdraw", args);
-      return true;
-    } catch (error) {
-      console.log(error);
-      return false;
-    }
-  }
-
-  async deployNative(chainId: Number, account: any, args: any[]) {
-    try {
-      const abi: any = await getDeploymentAbi();
-      const executorAddress: string = await getDeploymentContract();
-      await this.writeContract(chainId, executorAddress, abi, "withdraw", args);
-      return true;
-    } catch (error) {
-      console.log(error);
-      return false;
-    }
-  }
-
-  async deployCrossChain(chainId: Number, account: any, args: any[]) {
-    try {
-      const abi: any = [];
-      const executorAddress: string = await getDeploymentContract();
-      await this.writeContract(chainId, executorAddress, abi, "withdraw", args);
-      return true;
-    } catch (error) {
-      console.log(error);
-      return false;
     }
   }
 
@@ -165,12 +167,6 @@ export class RegistryDB {
       return false;
     }
   }
-
-  async getShareBalance() {}
-
-  async getVolume() {}
-
-  async getDepositorInfo() {}
 
   async readContract(
     chainId: Number,
