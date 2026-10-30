@@ -348,6 +348,33 @@ export async function getDepositorsById(creatorId: Number) {
   }
 }
 
+export async function getVaultHolders(vaultId: number) {
+  try {
+    await pool.connect();
+    const results = await pool.query(
+      "SELECT * FROM VaultHolders WHERE vaultId = $1",
+      [vaultId],
+    );
+    return results.rows || [];
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+export async function getCurrentStrategy(vaultId: number) {
+  try {
+    await pool.connect();
+    const results = await pool.query(
+      "SELECT * FROM CurrentStrategy WHERE vaultId = $1",
+      [vaultId],
+    );
+    return results.rows || [];
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
 export async function getVaultByCreatorAddress(creatorAddress: address) {
   try {
     await pool.connect();
@@ -473,7 +500,45 @@ export async function getStrategyById(id: string) {
   }
 }
 
-export async function insertStrategy(strategy: any[]) {
+export async function insertVaultHolder(creatorId: number, vaultId: number) {
+  try {
+    await pool.connect();
+    const results = await pool.query(
+      "INSERT INTO VaultHolders (creatorId, vaultId) VALUES ($1, $2) RETURNING *",
+      [creatorId, vaultId],
+    );
+    return results.rows || [];
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+export async function insertCurrentStrategy(
+  strategyId: number,
+  vaultId: number,
+) {
+  try {
+    await pool.connect();
+    const results = await pool.query(
+      "INSERT INTO CurrentStrategy (strategyId, vaultId) VALUES ($1, $2) RETURNING *",
+      [strategyId, vaultId],
+    );
+    return results.rows || [];
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+export async function insertStrategy(
+  name: string,
+  protocol: string,
+  chainId: number,
+  contractAddress: string,
+  creatorAddress: string,
+  configuration: Record<string, any>,
+) {
   try {
     const results = await pool.query(
       `INSERT INTO Strategies

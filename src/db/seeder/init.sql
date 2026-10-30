@@ -42,6 +42,8 @@ creatorAddress TEXT NOT NULL
 );
 
 
+
+
 CREATE TABLE Vaults if NOT EXISTS{
  id PRIMARY key,
   vaultName TEXT, --vaultName
@@ -78,7 +80,15 @@ CREATE TABLE VaultReturns{
 }
 
 -- INSERT INTO Bridges (API_KEY , bridgeName,chainsAvailable, baseUrl) VALUES ('Test', [], 'https://wtf.com');
+CREATE TABLE VaultHolders(
+creatorId FOREIGN KEY REFERENCES Creators(id),
+vaultId FOREIGN Key REFERENCES Vaults(id)
+)
 
+CREATE TABLE CurrentStrategy(
+  strategyId FOREIGN Key REFERENCES strategies(id),
+  vaultId FOREIGN Key REFERENCES Vaults(id)
+)
 CREATE TABLE strategies (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
