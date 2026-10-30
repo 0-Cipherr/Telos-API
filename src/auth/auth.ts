@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { jwtVerify, importSPKI } from "jose";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { findCreatorByApiKey, type Creator } from "../db/telos-queries.js";
 
 declare global {
@@ -11,15 +11,18 @@ declare global {
   }
 }
 
-let verificationKey: Promise<CryptoKey> | null = null;
+// Privy signs access tokens with rotating ES256 keys published at a public
+// JWKS endpoint. Fetching it (and caching it) verifies tokens without any
+// secret, and key rotation needs no config change.
+const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
-// The Privy verification key (Dashboard > App settings) lets us check access
-// tokens locally, without calling Privy or storing the app secret here.
-function getVerificationKey(): Promise<CryptoKey> {
-  const pem = (process.env.PRIVY_VERIFICATION_KEY || "").replace(/\\n/g, "\n");
-  if (!pem) throw new Error("PRIVY_VERIFICATION_KEY is not set");
-  verificationKey ??= importSPKI(pem, "ES256");
-  return verificationKey;
+function getJwks(appId: string) {
+  let jwks = jwksCache.get(appId);
+  if (!jwks) {
+    jwks = createRemoteJWKSet(new URL(`https://auth.privy.io/api/v1/apps/${appId}/jwks.json`));
+    jwksCache.set(appId, jwks);
+  }
+  return jwks;
 }
 
 function bearer(req: Request): string {
@@ -35,7 +38,7 @@ export async function requirePrivyUser(req: Request, res: Response, next: NextFu
     return;
   }
   try {
-    const { payload } = await jwtVerify(token, await getVerificationKey(), {
+    const { payload } = await jwtVerify(token, getJwks(appId), {
       issuer: "privy.io",
       audience: appId,
     });

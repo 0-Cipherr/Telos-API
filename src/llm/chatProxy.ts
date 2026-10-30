@@ -1,5 +1,6 @@
 import { Readable } from "node:stream";
 import express, { type Request, type Response, type Router } from "express";
+import { requireTelosKey } from "../auth/auth.js";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -69,6 +70,7 @@ type ChatPayload = {
   max_tokens?: unknown;
   stream?: unknown;
   purpose?: unknown;
+  plugins?: unknown;
 };
 
 export const chatRouter: Router = express.Router();
@@ -84,7 +86,10 @@ chatRouter.get("/", (_req: Request, res: Response) => {
   });
 });
 
-chatRouter.post("/", async (req: Request, res: Response) => {
+// Every chat call must carry the Telos key issued on wallet connect. The key
+// is what ties strategist usage to a creator; the OpenRouter key never leaves
+// the server.
+chatRouter.post("/", requireTelosKey, async (req: Request, res: Response) => {
   if (!originAllowed(req)) {
     res.status(403).json({ error: "forbidden origin" });
     return;
@@ -138,6 +143,8 @@ chatRouter.post("/", async (req: Request, res: Response) => {
       // token. The lab wants answers, not a monologue, so ask OpenRouter to
       // skip it. Providers without reasoning ignore this.
       if (reasoningHint) body.reasoning = { enabled: false };
+      // Web lookups are opt-in per request (the chat asks only for current-info questions).
+      if (Array.isArray(payload.plugins) && payload.plugins.length > 0) body.plugins = payload.plugins;
 
       let response: Upstream;
       try {

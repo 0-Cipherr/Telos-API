@@ -1,6 +1,7 @@
 import express from "express";
 import { requirePrivyUser, requireTelosKey } from "../auth/auth.js";
 import { provisionAgentKey } from "../llm/openRouterProvisioning.js";
+import { insertDeployedStrategy, parseStrategyDraft } from "../strategies/deployedStrategies.js";
 import {
   getAgentForVault,
   getOrCreateApiKey,
@@ -49,6 +50,27 @@ creatorRouter.post("/connect", requirePrivyUser, async (req, res) => {
 creatorRouter.get("/me", requireTelosKey, (req, res) => {
   const { id, wallet_address } = req.creator!;
   res.json({ creatorId: id, walletAddress: wallet_address });
+});
+
+// Deploys a strategy drafted in the strategy chat. It is listed on the public
+// strategies page and can be picked when creating a vault.
+creatorRouter.post("/strategies", requireTelosKey, async (req, res) => {
+  const parsed = parseStrategyDraft(req.body);
+  if (!parsed.value) {
+    res.status(400).json({ error: parsed.error });
+    return;
+  }
+  try {
+    const row = await insertDeployedStrategy(parsed.value, {
+      source: "creator",
+      creatorId: req.creator!.id,
+      creatorWallet: req.creator!.wallet_address,
+    });
+    res.status(201).json({ strategy: { id: row.id, createdAt: row.created_at } });
+  } catch (error) {
+    console.error("[creator/strategies]", error);
+    res.status(500).json({ error: "could not deploy strategy" });
+  }
 });
 
 // Called right after the on-chain VaultFactory transaction succeeds.
