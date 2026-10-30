@@ -8,7 +8,11 @@ import type { Application, Request, Response } from "express";
 import express from "express";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { startAgentTaskManager } from "./agent-tasks/AgentTaskManager.js";
 import { chatRouter } from "./llm/chatProxy.js";
+import { startScheduledStrategyPublisher } from "./strategies/scheduledStrategies.js";
+import { strategyAdminRouter } from "./strategies/strategyAdminRouter.js";
+import { creatorRouter } from "./vaults/creatorRouter.js";
 import { registryRouter } from "./vaults/registryRouter.js";
 const app: Application = express();
 
@@ -22,6 +26,8 @@ process.on("unhandledRejection", (reason) => {
 app.use("/api/chat", chatRouter);
 
 app.use("/registry", registryRouter);
+app.use("/creator", express.json({ limit: "100kb" }), creatorRouter);
+app.use("/admin", express.json({ limit: "100kb" }), strategyAdminRouter);
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({ ok: true });
 });
@@ -57,6 +63,8 @@ app.get("/", (req: Request, res: Response) => {
 const port = Number(process.env.PORT || 3000);
 app.listen(port, () => {
   console.log(`Listening at port ${port}`);
+  startAgentTaskManager();
+  startScheduledStrategyPublisher();
 });
 //set up classses for bridge follwinf interface standard
 

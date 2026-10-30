@@ -1,27 +1,150 @@
 import express from "express";
-import BridgeQueries from "../db/bridge-handler/bridgeQueries.js";
-import type { BridgeQueryRules } from "../interfaces/bridge-interfaces.js";
-import { Registry } from "../onchain/onchain-executor.js";
-import type { address } from "../types/OnchainTypes.js";
+import { requirePrivyUser, requireTelosKey } from "../auth/auth.js";
+import { provisionAgentKey } from "../llm/openRouterProvisioning.js";
+import {
+  getAgentForVault,
+  getOrCreateApiKey,
+  getStrategiesForVault,
+  getVaultForCreator,
+  insertAgentWithTask,
+  insertVault,
+  listVaults,
+  upsertCreator,
+} from "../db/telos-queries.js";
 
 export const creatorRouter = express.Router();
-const bridgeQueries: BridgeQueryRules = new BridgeQueries();
-const creatorDB = new CreatorDB();
-const _registryAdrrress: address = "0x";
-const _messengerAddress: address = "0x";
-const _factoryAddress: address = "0x";
-const registry = new Registry(
-  _registryAdrrress,
-  _messengerAddress,
-  _factoryAddress,
-);
 
-registryRouter.get("/all", async (req, res) => {
+const ALLOWED_MODELS = new Set([
+  "openai/gpt-4o-mini",
+  "openai/gpt-4.1-mini",
+  "anthropic/claude-3.5-haiku",
+  "google/gemini-2.5-flash",
+  "meta-llama/llama-3.3-70b-instruct",
+  "deepseek/deepseek-chat-v3",
+  "qwen/qwen-2.5-coder-32b-instruct",
+  "mistralai/mistral-large",
+  "cohere/north-mini-code:free",
+  "nvidia/nemotron-3.5-lightning:free",
+  "nvidia/nemotron-3-ultra-550b-a55b:free",
+]);
+
+// First wallet connect: the Privy token proves who the user is, and we hand
+// back the Telos API key. The frontend stores it and sends it automatically.
+creatorRouter.post("/connect", requirePrivyUser, async (req, res) => {
   try {
-    const result = await vaultsRegistryDB.all();
-    res.status(200).send({ result });
+    const walletAddress = String(req.body?.walletAddress || "");
+    if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      res.status(400).json({ error: "walletAddress must be a 0x address" });
+      return;
+    }
+    const creator = await upsertCreator(req.privyUserId!, walletAddress);
+    const apiKey = await getOrCreateApiKey(creator.id);
+    res.json({ creatorId: creator.id, walletAddress: creator.wallet_address, apiKey });
   } catch (error) {
-    console.log(error);
-    res.status(500).send({ message: "unexpected error" });
+    console.error("[creator/connect]", error);
+    res.status(500).json({ error: "could not connect creator" });
+  }
+});
+
+creatorRouter.get("/me", requireTelosKey, (req, res) => {
+  const { id, wallet_address } = req.creator!;
+  res.json({ creatorId: id, walletAddress: wallet_address });
+});
+
+// Called right after the on-chain VaultFactory transaction succeeds.
+creatorRouter.post("/vaults", requireTelosKey, async (req, res) => {
+  try {
+    const { chainId, onchainVaultId, vaultAddress, name, ticker, creatorFeeBps } = req.body ?? {};
+    if (
+      !Number.isInteger(chainId) ||
+      !Number.isInteger(onchainVaultId) ||
+      !/^0x[a-fA-F0-9]{40}$/.test(String(vaultAddress)) ||
+      !name ||
+      !ticker ||
+      !Number.isInteger(creatorFeeBps)
+    ) {
+      res.status(400).json({ error: "chainId, onchainVaultId, vaultAddress, name, ticker, creatorFeeBps are required" });
+      return;
+    }
+    const vault = await insertVault({
+      creatorId: req.creator!.id,
+      chainId,
+      onchainVaultId,
+      vaultAddress,
+      name: String(name).slice(0, 100),
+      ticker: String(ticker).slice(0, 20),
+      creatorFeeBps,
+    });
+    res.status(201).json({ vault });
+  } catch (error) {
+    console.error("[creator/vaults]", error);
+    res.status(500).json({ error: "could not save vault" });
+  }
+});
+
+creatorRouter.get("/vaults", requireTelosKey, async (req, res) => {
+  try {
+    const vaults = (await listVaults()).filter((vault) => vault.creator_id === req.creator!.id);
+    res.json({ vaults });
+  } catch (error) {
+    console.error("[creator/vaults:list]", error);
+    res.status(500).json({ error: "could not list vaults" });
+  }
+});
+
+// Plugs an agent into a vault. The OpenRouter sub-key is created here, on the
+// server, and the schedule starts immediately via the AgentTasks row.
+creatorRouter.post("/vaults/:vaultId/agent", requireTelosKey, async (req, res) => {
+  try {
+    const vaultId = Number(req.params.vaultId);
+    const vault = await getVaultForCreator(vaultId, req.creator!.id);
+    if (!vault) {
+      res.status(404).json({ error: "vault not found" });
+      return;
+    }
+    if (await getAgentForVault(vaultId)) {
+      res.status(409).json({ error: "this vault already has an agent" });
+      return;
+    }
+
+    const model = String(req.body?.model || "");
+    if (!ALLOWED_MODELS.has(model)) {
+      res.status(400).json({ error: "model is not on the allow-list" });
+      return;
+    }
+    const rethinkIntervalMinutes = Number(req.body?.rethinkIntervalMinutes ?? 1440);
+    if (!Number.isInteger(rethinkIntervalMinutes) || rethinkIntervalMinutes < 5) {
+      res.status(400).json({ error: "rethinkIntervalMinutes must be an integer >= 5" });
+      return;
+    }
+
+    const provisioned = await provisionAgentKey(`${vault.id}-${vault.vault_ticker}`);
+    const agent = await insertAgentWithTask({
+      creatorId: req.creator!.id,
+      vaultId,
+      model,
+      openrouterKey: provisioned.key,
+      openrouterKeyHash: provisioned.hash,
+      rethinkIntervalMinutes,
+    });
+    const { openrouter_key: _secret, openrouter_key_hash: _hash, ...safeAgent } = agent;
+    res.status(201).json({ agent: safeAgent });
+  } catch (error) {
+    console.error("[creator/agent]", error);
+    res.status(500).json({ error: "could not create agent" });
+  }
+});
+
+creatorRouter.get("/vaults/:vaultId/strategies", requireTelosKey, async (req, res) => {
+  try {
+    const vault = await getVaultForCreator(Number(req.params.vaultId), req.creator!.id);
+    if (!vault) {
+      res.status(404).json({ error: "vault not found" });
+      return;
+    }
+    res.json({ strategies: await getStrategiesForVault(vault.id) });
+  } catch (error) {
+    console.error("[creator/strategies]", error);
+    res.status(500).json({ error: "could not load strategies" });
   }
 });

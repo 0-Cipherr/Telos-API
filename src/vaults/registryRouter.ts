@@ -14,6 +14,7 @@ import {
   insertStrategy,
   insertVault,
 } from "../db/vault-handler/vault-queries.js";
+import { listVaults } from "../db/telos-queries.js";
 import { RegistryDB } from "../execution/RegistryDB.js";
 import type { BridgeQueryRules } from "../interfaces/bridge-interfaces.js";
 import { Registry } from "../onchain/onchain-executor.js";
@@ -62,6 +63,15 @@ registryRouter.get("/all", async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: "unexpected error" });
+  }
+});
+
+registryRouter.get("/vaults", async (req, res) => {
+  try {
+    res.json({ vaults: await listVaults() });
+  } catch (error) {
+    console.error("[registry/vaults]", error);
+    res.status(500).json({ error: "could not list vaults" });
   }
 });
 

@@ -10,6 +10,7 @@ const pool = new Pool({
   user: process.env.POSTGRES_USER || "postgres",
   password: process.env.POSTGRES_PASSWORD || "admin1234",
   database: process.env.POSTGRES_DB || "admin",
+  ssl: process.env.POSTGRES_SSL === "true" ? { rejectUnauthorized: false } : undefined,
 });
 
 // A dropped/unreachable database must not take the whole API down: the chat
