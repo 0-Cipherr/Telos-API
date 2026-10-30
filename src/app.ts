@@ -15,6 +15,7 @@ import { strategyAdminRouter } from "./strategies/strategyAdminRouter.js";
 import { creatorRouter } from "./vaults/creatorRouter.js";
 import { registryRouter } from "./vaults/registryRouter.js";
 const app: Application = express();
+app.use(cors());
 
 // The chat/audit proxy is independent of Postgres. A database outage should
 // degrade the registry endpoints, not kill the process and the UI with it.
@@ -31,8 +32,6 @@ app.use("/admin", express.json({ limit: "100kb" }), strategyAdminRouter);
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({ ok: true });
 });
-app.use(cors());
-
 // Serve the built frontend from the same origin as the API. In production the
 // browser calls `/api/chat` with no CORS dance and no separate static host.
 const frontendDist = resolve(
