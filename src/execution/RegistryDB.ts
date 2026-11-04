@@ -24,6 +24,18 @@ export class RegistryDB {
     });
   }
 
+  async function seedVault(vault:any){
+    try {
+      
+    } catch (error){
+      console.log(error)
+      return [];
+    }
+  }
+
+
+
+
   async allVaults() {
     try {
       const vaults = await getAllVaults();

@@ -3,10 +3,11 @@
 //but instead we doing in typescript
 //index.ts
 import "dotenv/config";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
 import type { Application, Request, Response } from "express";
 import express from "express";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+import { microserviceRoter } from "../microservice/microserviceRoutes.js";
 import { chatRouter } from "./llm/chatProxy.js";
 import { registryRouter } from "./vaults/registryRouter.js";
 
@@ -22,6 +23,8 @@ process.on("unhandledRejection", (reason) => {
 app.use("/api/chat", chatRouter);
 
 app.use("/registry", registryRouter);
+app.use("/microservice", microserviceRoter);
+
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({ ok: true });
 });

@@ -1,57 +1,55 @@
-CREATE TABLE IF NOT EXISTS Bridges{
-  id PRIMARY Key,
+CREATE TABLE Bridges (
+  id INT PRIMARY KEY,
   API_KEY TEXT NOT NULL,
-  bridgeName VARCHAR(100) NOT NULL,
-  chainsAvailable INTEGER[] NOT NULL,
+  bridgeName TEXT NOT NULL,
+  chainsAvailable INTEGER NOT NULL,
   baseUrl TEXT NOT NULL
-};
+);
 
-
-CREATE TABLE Vaults if NOT EXISTS{
- id PRIMARY key,
+CREATE TABLE Vaults (
+  id INT PRIMARY KEY,
   vaultName TEXT, --vaultName
   vaultTicker TEXT,
-  vaultChains Array(NUMBER), -- array of chains vualt is on
-  creator TEXT NOT NULL, --creator 
-  addresses Array(Text) -- array of the vaults addresses must match chains legnth and indexes as well
-};
+  creator TEXT NOT NULL --creator 
+);
 
-CREATE TABLE TelosAgent{
- id PRIMARY key,
-WID VARBINARY(MAX),
-walletAddress TEXT,
-vaultMnaaged  FOREIGN Key REFERENCES Vaults(id),
-creatorUserName TEXT,
-agentDeployerAddress: TEXT
-};
+CREATE TABLE VaultsCollection (
+  vaultId INT NOT NULL,
+  chainsConfigsId INT NOT NULL,
+  PRIMARY KEY (vaultId, chainsConfigId), --here u can add as many primary keys as u want 
+  FOREIGN KEY (vaultId) REFERENCES vaults (id)
+)
+CREATE TABLE chainsConfigs (
+  id INT PRIMARY KEY,
+  chainId NUMBER,
+  endpoint VARCHAR(65) NOT NULL,
+  endpointId VARCHAR(65) NOT NULL
+);
 
-CREATE TABLE DeploymentsManager{
-  id PRIMARY KEY,
-  chainId NUMERIC,
-  deploymentRef FOREIGN Key REFERENCES Deployments(id)
-};
+CREATE TABLE TelosAgent (
+  id INT PRIMARY KEY,
+  walletAddress TEXT,
+  FOREIGN Key (id) REFERENCES Vaults (id),
+  creatorUserName TEXT NOT NULL,
+  agentDeployerAddress TEXT NOT NULL
+);
 
-CREATE TABLE Deployments IF NOT EXISTS{
-  id PRIMARY key,
-  contractType TEXT,
-  contractAddress TEXT,
-  abi JSONB NOT NULL,
-};
-
-CREATE TABLE VaultMetrics if NOT EXISTS {
-  FOREIGN KEY (vault_id) REFERENCES Vault(vault_id),
-  volume  number NOT NULL,
+CREATE TABLE VaultMetrics (
+  vault_id INT NOT NULL,
+  PRIMARY KEY (vault_id),
+  FOREIGN KEY (vault_id) REFERENCES Vault (vault_id),
+  volume number NOT NULL,
   protocolFees Number NOT NULL,
   apy Number Not NUll,
-  #/alltime rewards 
-}
+  -- #/alltime rewards 
+);
 
-
-CREATE TABLE HistoricalApy{
-  vaultId FOREIGN Key REFERENCES Vaults(id),
+CREATE TABLE HistoricalApy (
+  vaultId INT PRIMARY KEY NOT NULL,
+  FOREIGN Key (vaultId) REFERENCES Vaults (id),
   apy Number Not Null,
   apr Number Not Null,
   timestamp TIME,
-}
+);
 
 -- INSERT INTO Bridges (API_KEY , bridgeName,chainsAvailable, baseUrl) VALUES ('Test', [], 'https://wtf.com');

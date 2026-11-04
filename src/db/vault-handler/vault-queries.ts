@@ -98,6 +98,56 @@ export function filterABI(name: string, chainId: Number, deployments: any[]) {
   }
 }
 
+
+export async function insertTelosAgent(is_seed:boolean, walletAddress: String as `0x${String}`, agentUserName:String, agentWalletAddress:String as `0x${String}`){
+  try {
+    const result = await pool.query(`
+    INSERT INTO TelosAgent (id, walletAddress, agentUserName, agentWalletAddress) VALUES ($1, $2, $3, $4);
+    `, [walletAddress, agentUserName, agentWalletAddress]);
+  return result.rows || [];
+  } catch (error){
+    console.log(error)
+    return [];
+  }
+}
+
+export async function insertVaultsCollection(chainsConfigsId:Number, vaultId:Number){
+  try {
+    const seedResult = await pool.query(`
+    INSERT INTO VaultsCollections(vaultId, chainsConfigsId) VALUES ($1, $2);
+    `, [chainsConfigId, vaultId]);
+    
+    return seedResult?.rows;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function insertVaultMetrics(is_seed:boolean, vault_id:Number, volume:Number, protocolFees:Number, apy:Number){
+  try {
+    const result  =await pool.query(`
+     INSERT INTO VaultMetrics (vault_id, volume, protocolFees, apy) VALUES ($1, $2, $3, $4);
+    `, [vault_id, volume, protocolFees, apy]);
+
+    return result.rows || [];
+  } catch (error){
+    console.log(error)
+    return [];
+  }
+}
+
+export async function seedVault(vault:any){
+  try {
+    await insertVaultsCollection(vault?.chainsConfigId, vault?.vaultId);
+    await insertVaultMetrics(false, vault?.vaultId, vault?.volume, vault?.protocolFees, vault?.apy);
+    await insertTelosAgent(false, vault?.agentWalletAddress, vault?.agentUserName, vault?.agentAddress)
+    return true; 
+  } catch (error){
+       console.log(error);
+       return false;
+  } 
+}
+
 export function filterContract(
   name: string,
   chainId: Number,
