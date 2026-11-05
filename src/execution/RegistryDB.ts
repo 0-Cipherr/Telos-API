@@ -12,8 +12,10 @@ import {
   getVaultById,
   getVaultByName,
   insertVault,
+  seedVault,
 } from "../db/vault-handler/vault-queries.js";
 import type { address } from "../types/OnchainTypes.js";
+import type { VaultSeedConfig } from "../types/DBTypes.js";
 export class RegistryDB {
   async setChain(chain: WalletClientConfig) {}
   async setClient(account: any, cleint: any, chain: any) {
@@ -24,17 +26,21 @@ export class RegistryDB {
     });
   }
 
-  async function seedVault(vault:any){
+  async seedVault(vault: VaultSeedConfig) {
     try {
-      
-    } catch (error){
-      console.log(error)
+      const seedResult: any = await seedVault(vault);
+    } catch (error) {
+      console.log(error);
       return [];
     }
   }
 
-
-
+  async validateVault(vault: VaultSeedConfig) {
+    try {
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   async allVaults() {
     try {
@@ -47,32 +53,10 @@ export class RegistryDB {
     }
   }
 
-  async vaultByName(name: string) {
+  async vaultByName(name: String) {
     try {
       const vault = await getVaultByName(name);
       return vault || [];
-    } catch (error) {
-      console.log(error);
-      return [];
-    }
-  }
-
-  async inserVault(
-    vaultName: string,
-    vaultTicker: string,
-    vaultChains: any[],
-    creator: string,
-    addresses: string[],
-  ) {
-    try {
-      const result: any = await insertVault(
-        vaultName,
-        vaultTicker,
-        vaultChains,
-        creator,
-        addresses,
-      );
-      return result;
     } catch (error) {
       console.log(error);
       return [];
@@ -110,7 +94,7 @@ export class RegistryDB {
 
   async deposit(chainId: Number, account: any, args: any[]) {
     try {
-      const abi: any = await getDeploymentAbi();
+      const abi: any = await getDeploymentABI();
       const executorAddress: string = await getDeploymentContract();
       await this.writeContract(chainId, executorAddress, abi, "deposit", args);
       return true;
@@ -152,25 +136,17 @@ export class RegistryDB {
       return true;
     } catch (error) {
       console.log(error);
-      return false;
     }
   }
 
   async addVault(
     vaultName: string,
     vaultTicker: string,
-    vaultChains: any[],
-    creator: address,
-    deployedAddresses: address[],
+    creatorId: Number,
+    chainsConfigsId: Number,
   ) {
     try {
-      await insertVault(
-        vaultName,
-        vaultTicker,
-        vaultChains,
-        creator,
-        deployedAddresses,
-      );
+      await insertVault(vaultName, vaultTicker, creatorId, chainsConfigsId);
       return true;
     } catch (error) {
       console.log(error);

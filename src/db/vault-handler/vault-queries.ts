@@ -1,6 +1,7 @@
 import type { QueryResult } from "pg";
 import type { address } from "../../types/OnchainTypes.js";
 import pool from "../pool.js";
+import type { VaultSeedConfig } from "../../types/DBTypes.js";
 
 export async function getAllVaults() {
   try {
@@ -98,54 +99,127 @@ export function filterABI(name: string, chainId: Number, deployments: any[]) {
   }
 }
 
-
-export async function insertTelosAgent(is_seed:boolean, walletAddress: String as `0x${String}`, agentUserName:String, agentWalletAddress:String as `0x${String}`){
+export async function insertTelosAgent(
+  is_seed: boolean,
+  walletAddress: String,
+  userId: Number,
+  agentUserName: String,
+) {
   try {
-    const result = await pool.query(`
-    INSERT INTO TelosAgent (id, walletAddress, agentUserName, agentWalletAddress) VALUES ($1, $2, $3, $4);
-    `, [walletAddress, agentUserName, agentWalletAddress]);
-  return result.rows || [];
-  } catch (error){
-    console.log(error)
+    const result = await pool.query(
+      "INSERT INTO TelosAgent (walletAddress, userId, creatorUserName)",
+      [walletAddress, userId, agentUserName],
+    );
+    return result.rows || [];
+  } catch (error) {
+    console.log(error);
     return [];
   }
 }
 
-export async function insertVaultsCollection(chainsConfigsId:Number, vaultId:Number){
+export async function insertVault(
+  vaultName: String,
+  vaultTicker: String,
+  creatorId: Number,
+  chainsConfigsId: Number,
+): Promise<Number | null> {
   try {
-    const seedResult = await pool.query(`
-    INSERT INTO VaultsCollections(vaultId, chainsConfigsId) VALUES ($1, $2);
-    `, [chainsConfigId, vaultId]);
-    
+    const result: any = await pool.query(
+      "INSERT INTO Vaults (vaultName, vaultTicker, creatorId, chainsConfigsId) VALUES ($1, $2, $3, $4)",
+      [vaultName, vaultTicker, creatorId, chainsConfigsId],
+    );
+
+    return result.rows?.id || null;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
+export async function insertVaultsCollection(
+  chainsConfigsId: Number,
+  vaultId: Number,
+) {
+  try {
+    const seedResult = await pool.query(
+      "INSERT INTO VaultsCollections(vaultId, chainsConfigsId) VALUES ($1, $2);",
+      [chainsConfigsId, vaultId],
+    );
+
     return seedResult?.rows;
   } catch (error) {
     console.log(error);
   }
 }
 
-export async function insertVaultMetrics(is_seed:boolean, vault_id:Number, volume:Number, protocolFees:Number, apy:Number){
+export async function insertVaultMetrics(
+  is_seed: boolean,
+  vault_id: Number,
+  volume: Number,
+  protocolFees: Number,
+  apy: Number,
+) {
   try {
-    const result  =await pool.query(`
-     INSERT INTO VaultMetrics (vault_id, volume, protocolFees, apy) VALUES ($1, $2, $3, $4);
-    `, [vault_id, volume, protocolFees, apy]);
+    const result = await pool.query(
+      "INSERT INTO VaultMetrics (vault_id, volume, protocolFees, apy) VALUES ($1, $2, $3, $4);",
+      [vault_id, volume, protocolFees, apy],
+    );
 
     return result.rows || [];
-  } catch (error){
-    console.log(error)
+  } catch (error) {
+    console.log(error);
     return [];
   }
 }
 
-export async function seedVault(vault:any){
+export async function insertHistoricalAPY(
+  vaultId: Number,
+  apy: Number,
+  apr: Number,
+  time: any,
+) {
   try {
-    await insertVaultsCollection(vault?.chainsConfigId, vault?.vaultId);
-    await insertVaultMetrics(false, vault?.vaultId, vault?.volume, vault?.protocolFees, vault?.apy);
-    await insertTelosAgent(false, vault?.agentWalletAddress, vault?.agentUserName, vault?.agentAddress)
-    return true; 
-  } catch (error){
-       console.log(error);
-       return false;
-  } 
+    const result = await pool.query(
+      "INSERT INTO HistoricalApy (vaultId, apy, apr, time ) VALUES ($1, $2, $3, $4);",
+      [vaultId, apy, apr, time],
+    );
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function seedVault(vault: VaultSeedConfig): Promise<boolean> {
+  try {
+    const vaultId: Number | null = await insertVault(
+      vault?.vaultName,
+      vault?.vaultTicker,
+      vault?.creatorId,
+      vault?.chainsConfigsId,
+    );
+
+    if (vaultId !== null) {
+    } else {
+      throw new Error("Vault could not be inserted into our table ");
+    }
+    await insertVaultsCollection(vault?.chainsConfigsId, vault?.vaultId);
+    await insertVaultMetrics(
+      false,
+      vault?.vaultId,
+      vault?.volume,
+      vault?.protocolFees,
+      vault?.apy,
+    );
+    await insertTelosAgent(
+      false,
+      vault?.agentWalletAddress,
+      vaultId,
+      vault?.agentUserName,
+    );
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
 }
 
 export function filterContract(
@@ -173,24 +247,4 @@ export function filterContract(
 
 export async function getDeploymentContract() {
   return "";
-}
-
-export async function insertVault(
-  vaultName: string,
-  vaultTicker: string,
-  vaultChains: any[],
-  creator: string,
-  addresses: string[],
-) {
-  try {
-    await pool.connect();
-    const results = await pool.query(
-      "INSERT INTO Vaults (vaultName,vaultTicker,,aultChains, creator. addresses), VALUES ($1, $2, $3. $4, $5)",
-      [vaultName, vaultTicker, vaultChains, creator, addresses],
-    );
-    return results.rows || [];
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
 }

@@ -10,7 +10,10 @@ CREATE TABLE Vaults (
   id INT PRIMARY KEY,
   vaultName TEXT, --vaultName
   vaultTicker TEXT,
-  creator TEXT NOT NULL --creator 
+  creatorId INT NOT NULL,
+  FOREIGN KEY (creatorId) REFERENCES TelosUsers(id),
+  chainsConfigId INT NOT NULL,
+  FOREIGN KEY (chainsConfigId) REFERENCES chainsConfigs(id) -- if vault deployed on multiple chais it should have mltile rows 
 );
 
 CREATE TABLE VaultsCollection (
@@ -18,7 +21,7 @@ CREATE TABLE VaultsCollection (
   chainsConfigsId INT NOT NULL,
   PRIMARY KEY (vaultId, chainsConfigId), --here u can add as many primary keys as u want 
   FOREIGN KEY (vaultId) REFERENCES vaults (id)
-)
+);
 CREATE TABLE chainsConfigs (
   id INT PRIMARY KEY,
   chainId NUMBER,
@@ -30,8 +33,22 @@ CREATE TABLE TelosAgent (
   id INT PRIMARY KEY,
   walletAddress TEXT,
   FOREIGN Key (id) REFERENCES Vaults (id),
-  creatorUserName TEXT NOT NULL,
-  agentDeployerAddress TEXT NOT NULL
+  userId INT NOT NULL,
+  FOREIGN Key (creatorId) REFERENCES TelosUsers(id),
+  creatorUserName TEXT NOT NULL
+);
+
+CREATE TABLE TelosUsers(
+  id INT PRIMARY KEY,
+  address TEXT NOT NULL,
+  volume INT NOT NULL,
+  feesEarned INT NOT NULL
+);
+
+CREATE TABLE VaultDeployments(
+  vaultId INT NOT NULL,
+  FOREIGN KEY (vaultId) REFERENCES Vaults(id),
+
 );
 
 CREATE TABLE VaultMetrics (
