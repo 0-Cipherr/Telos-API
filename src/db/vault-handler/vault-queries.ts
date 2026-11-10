@@ -14,6 +14,46 @@ export async function getAllVaults() {
   }
 }
 
+export async function getAggrVaultInfo(
+  vaultId: number,
+  isSeedCall: boolean,
+  getCreatorInfo: boolean,
+  getChainConfigsInfo: boolean,
+): Promise<any | null> {
+  try {
+    const conditionalVaultInfoQuery: string | null = isSeedCall
+      ? `vaults.vaultName, vaults.vaultTicker,`
+      : null;
+
+    const conditionalCreatorInfoQuery: string | null = getCreatorInfo
+      ? `telosUser.address, telosUser.volume, telosUser.feesEarned,`
+      : null;
+
+    const conditionalchainsConfigsQuery: string = ``;
+    const result = await pool.query(`
+       SELECT vaults.vaultName, ${conditionalVaultInfoQuery} ${conditionalCreatorInfoQuery} 
+`);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function getTelosUser(creatorId: number) {
+  try {
+    const result = await pool.query(
+      `
+    SELECT * FROM TelosUsers WHERE id = $1
+    `,
+      [creatorId],
+    );
+
+    return result.rows || [];
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
 export async function getDeployments() {
   try {
     await pool.connect();

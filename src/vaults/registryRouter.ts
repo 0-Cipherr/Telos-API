@@ -44,7 +44,7 @@ registryRouter.post("/add", async (req, res) => {
   try {
     const result = await vaultsRegistryDB.addVault(
       req.body.vaultInfo.vaultName,
-      req.body.vaultInfo.vaultChains,
+      req.body.vaultInfo.vaultTicker,
       req.body.creatorId,
       req.body.chainsConfigsId,
     );
