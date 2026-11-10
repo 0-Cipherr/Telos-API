@@ -1,4 +1,6 @@
 import express from "express";
+
+import type {TelosUser} from "../../src/types/OnchainTypes.ts";
 import { requirePrivyUser, requireTelosKey } from "../auth/auth.js";
 import { provisionAgentKey } from "../llm/openRouterProvisioning.js";
 import {
@@ -42,3 +44,16 @@ creatorRouter.get("/:id", (req, res) => {
   }
 });
 
+creatorRouter.post("/create", async (req, res) => {
+  try {
+    const { creator }= req.bpdy;
+    await insertTelosUser(creator);
+return {message:"Telos user successfully created"}
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+
+
+function constructRequestResponse(result:any, message:string, error:boolean){}

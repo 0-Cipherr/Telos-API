@@ -8,3 +8,13 @@ export type VaultSeedConfig = {
   agentAddress: string;
   creatorFee: number;
 };
+export type VaultCollectionInfo = {
+  address: string;
+  volume: number;
+  feesEarned: number;
+};
+export type TelosUser = {
+  address: string;
+  volume: number;
+  feesEarned: number;
+};

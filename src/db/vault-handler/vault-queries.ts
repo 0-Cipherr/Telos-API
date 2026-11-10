@@ -1,5 +1,5 @@
 import type { QueryResult } from "pg";
-import type { address } from "../../types/OnchainTypes.js";
+import type { address, TelosUser } from "../../types/OnchainTypes.js";
 import pool from "../pool.js";
 import type { VaultSeedConfig } from "../../types/DBTypes.js";
 
@@ -54,17 +54,13 @@ export async function getTelosUser(creatorId: number) {
   }
 }
 
-export async function inserTelosUser(
-  address: string,
-  volume: number,
-  feesEarned: number,
-) {
+export async function inserTelosUser(telosUser: TelosUser) {
   try {
     const result = await pool.query(
       `
     INSERT INTO TelosUsers (address, volume, feesEarned) VALUES ($1, $2, $3)
     `,
-      [address, volume, feesEarned],
+      [telosUser?.address, telosUser?.volume, telosUser?.feesEarned],
     );
     return result.rows[0] || {};
   } catch (error) {
