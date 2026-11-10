@@ -47,10 +47,62 @@ export async function getTelosUser(creatorId: number) {
       [creatorId],
     );
 
-    return result.rows || [];
+    return result.rows[0] || [];
   } catch (error) {
     console.log(error);
     return [];
+  }
+}
+
+export async function inserTelosUser(
+  address: string,
+  volume: number,
+  feesEarned: number,
+) {
+  try {
+    const result = await pool.query(
+      `
+    INSERT INTO TelosUsers (address, volume, feesEarned) VALUES ($1, $2, $3)
+    `,
+      [address, volume, feesEarned],
+    );
+    return result.rows[0] || {};
+  } catch (error) {
+    console.log(error);
+    return {};
+  }
+}
+
+export async function updateTelosUserVolume(creatorId: number, volume: number) {
+  try {
+    const telosUser: any = await getTelosUser(creatorId);
+    const volumeAdded: number = telosUser?.volume + volume;
+    const result = await pool.query(
+      `
+INSERT INTO TelosUsers (volume) VALUE ($1) WHERE CreatorId = $2
+`,
+      [volume, creatorId],
+    );
+
+    return result.rows[0] || {};
+  } catch (error) {
+    console.log(error);
+    return {};
+  }
+}
+
+export async function upateTelosUserFeesEarned(creatorId: number) {
+  try {
+    const telosUser = await getTelosUser(creatorId);
+    const result = await pool.query(
+      `INSERT INTO TelosUsers (feesEarned) VALUES ($1) WHERE CreatorId = $2 `,
+      [telosUser?.feesEarned, creatorId],
+    );
+
+    return result.rows[0] || {};
+  } catch (error) {
+    console.log(error);
+    return {};
   }
 }
 
@@ -173,6 +225,24 @@ export async function insertVault(
   } catch (error) {
     console.log(error);
     return null;
+  }
+}
+
+export async function insertVaultCollection(
+  vaultId: number,
+  chainsConfigsId: Number,
+) {}
+
+export async function getVaultCollectionByVaultId(vaultId: number) {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM VaultsCollection as vs JOIN vault as v ON vc.vaultId = v.id  WHERE vaultId = $1`,
+      [vaultId],
+    );
+    return result.rows[0] || {};
+  } catch (error) {
+    console.log(error);
+    return {};
   }
 }
 

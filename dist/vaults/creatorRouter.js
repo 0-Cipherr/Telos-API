@@ -36,6 +36,7 @@ const ALLOWED_MODELS = new Set([
 creatorRouter.get("/:id", (req, res) => {
   try {
     const { id } = req.params;
+    const result = await;
   } catch (error) {
     console.log(error);
   }
