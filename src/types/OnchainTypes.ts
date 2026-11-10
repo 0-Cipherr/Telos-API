@@ -3,6 +3,8 @@ export type address = `0x${string}`;
 export type VaultSeedConfig = {
   vaultName: string;
   vaultTicker: string;
-  creatorId: Number;
+  creatorId: number;
   chainsConfigId: Number;
+  agentAddress: string;
+  creatorFee: number;
 };
